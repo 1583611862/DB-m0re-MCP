@@ -1,0 +1,19 @@
+security:
+  readOnlyEnvs:
+    - prod
+  maxQueryLimit: 100
+  sqlTimeout: 30000
+  dangerousPatterns:
+    - 'DROP\s+'
+    - 'TRUNCATE\s+'
+    - 'ALTER\s+TABLE'
+    - 'ALTER\s+DATABASE'
+    - 'CREATE\s+TABLE'
+    - 'DELETE\s+FROM\s+\w+\s*(?!WHERE)'
+    - 'UPDATE\s+\w+\s*(?!WHERE)'
+  allowedCommands:
+    - 'SELECT'
+    - 'SHOW'
+    - 'DESC'
+    - 'DESCRIBE'
+    - 'EXPLAIN'

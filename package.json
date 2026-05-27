@@ -1,0 +1,31 @@
+{
+  "name": "db-gateway-mcp",
+  "version": "1.0.0",
+  "description": "OpenCode 多数据库动态 MCP 网关",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": ["mcp", "database", "gateway"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.3",
+    "better-sqlite3": "^11.3.0",
+    "js-yaml": "^4.1.0",
+    "winston": "^3.14.2",
+    "mssql": "^10.0.4",
+    "mysql2": "^3.11.0",
+    "pg": "^8.12.0",
+    "oracledb": "^6.5.1",
+    "lru-cache": "^10.4.3"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.16.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}

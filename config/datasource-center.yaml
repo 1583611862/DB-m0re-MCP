@@ -1,0 +1,9 @@
+customers:
+  acme:
+    mysql:
+      dev:
+        host: localhost
+        port: 3306
+        database: acme_dev
+        username: root
+        password: root

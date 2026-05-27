@@ -1,0 +1,38 @@
+customers:
+  acme:
+    oracle:
+      prod:
+        host: 10.0.0.1
+        port: 1521
+        database: orcl
+        username: acme_prod
+        password: your_prod_password
+      test:
+        host: 10.0.0.2
+        port: 1521
+        database: orcl
+        username: acme_test
+        password: your_test_password
+    mysql:
+      dev:
+        host: localhost
+        port: 3306
+        database: acme_dev
+        username: root
+        password: root
+
+  beta:
+    postgresql:
+      prod:
+        host: 10.0.0.3
+        port: 5432
+        database: beta_prod
+        username: beta_prod
+        password: beta_pass
+    sqlserver:
+      test:
+        host: 10.0.0.4
+        port: 1433
+        database: beta_test
+        username: sa
+        password: SqlServerPass123!
