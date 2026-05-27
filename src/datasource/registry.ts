@@ -8,6 +8,7 @@ import {
   DatasourceContext,
   CurrentContext,
 } from '../types';
+import { logger } from '../logger';
 
 interface ConfigFile {
   customers: Record<
@@ -22,9 +23,12 @@ interface ConfigFile {
 export class DatasourceRegistry {
   private cache: LRUCache<string, { client: DatabaseClient; context: DatasourceContext }>;
   private config: ConfigFile;
+  private configPath: string;
   private currentContext: CurrentContext | null = null;
+  private watcher: fs.FSWatcher | null = null;
 
   constructor(configPath: string) {
+    this.configPath = configPath;
     this.config = this.loadConfig(configPath);
     this.cache = new LRUCache<string, { client: DatabaseClient; context: DatasourceContext }>({
       max: 20,
@@ -33,6 +37,56 @@ export class DatasourceRegistry {
         value.client.close().catch(() => {});
       },
     });
+    this.setupConfigWatcher();
+  }
+
+  private setupConfigWatcher(): void {
+    try {
+      const fullPath = path.resolve(this.configPath);
+      const dir = path.dirname(fullPath);
+      const filename = path.basename(fullPath);
+
+      this.watcher = fs.watch(dir, (eventType, filename_) => {
+        if (filename_ === filename && eventType === 'change') {
+          logger.info('Configuration file changed, reloading...');
+          setTimeout(() => this.reloadConfig(), 100);
+        }
+      });
+
+      this.watcher.on('error', (err) => {
+        logger.error('Config watcher error:', err);
+      });
+
+      logger.info(`Config file watcher started for: ${fullPath}`);
+    } catch (err) {
+      logger.error('Failed to setup config watcher:', err);
+    }
+  }
+
+  reloadConfig(): { success: boolean; message: string } {
+    try {
+      const oldConfig = this.config;
+      this.config = this.loadConfig(this.configPath);
+      
+      const oldCustomers = Object.keys(oldConfig?.customers || {});
+      const newCustomers = Object.keys(this.config.customers);
+      
+      const added = newCustomers.filter(c => !oldCustomers.includes(c));
+      const removed = oldCustomers.filter(c => !newCustomers.includes(c));
+
+      logger.info(`Configuration reloaded. Customers: ${newCustomers.join(', ')}`);
+      
+      return {
+        success: true,
+        message: `Configuration reloaded successfully. Added: [${added.join(', ')}], Removed: [${removed.join(', ')}]`
+      };
+    } catch (err) {
+      logger.error('Failed to reload config:', err);
+      return {
+        success: false,
+        message: `Failed to reload config: ${err instanceof Error ? err.message : String(err)}`
+      };
+    }
   }
 
   private loadConfig(configPath: string): ConfigFile {
@@ -145,5 +199,12 @@ export class DatasourceRegistry {
     const dbConfig = customerConfig[dbType];
     if (!dbConfig) return [];
     return Object.keys(dbConfig);
+  }
+
+  destroy(): void {
+    if (this.watcher) {
+      this.watcher.close();
+      this.watcher = null;
+    }
   }
 }

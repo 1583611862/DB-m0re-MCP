@@ -6,6 +6,7 @@
 
 - ✅ **多数据库支持**：MySQL、PostgreSQL、Oracle、SQL Server
 - ✅ **动态切换**：无需重启 MCP 服务器即可切换数据库
+- ✅ **配置热加载**：修改配置文件后自动生效，无需手动重启
 - ✅ **连接池复用**：基于 HikariCP 理念的连接池管理
 - ✅ **LRU 缓存**：自动管理数据源缓存，超时自动释放
 - ✅ **SQL 安全控制**：生产环境只读，危险 SQL 拦截
@@ -113,6 +114,53 @@ npm run dev
 - limit: 100（可选）
 返回：最近的 SQL 查询记录
 ```
+
+### 8. 重新加载配置
+
+```bash
+使用 reload_config 工具
+说明：手动重新加载配置文件（配置文件修改后也会自动重新加载）
+```
+
+## 🔥 配置热加载
+
+本系统支持**配置文件热加载**，您无需重启 MCP 服务器即可添加新的数据库配置。
+
+### 工作原理
+
+1. **自动检测**：系统使用文件系统监视器（fs.watch）实时监控配置文件变化
+2. **自动重载**：当 `config/datasource-center.yaml` 被修改时，系统会自动重新加载配置
+3. **立即生效**：新配置立即可用，无需任何重启操作
+
+### 使用方式
+
+**方式一：自动热加载（推荐）**
+- 直接修改 `config/datasource-center.yaml` 文件
+- 系统会在文件保存后自动检测并重新加载
+
+**方式二：手动重新加载**
+```bash
+使用 reload_config 工具
+返回：Configuration reloaded successfully. Added: [beta], Removed: []
+```
+
+### 示例
+
+1. 在 MCP 服务器运行中，打开 `config/datasource-center.yaml`
+2. 添加新的客户配置：
+```yaml
+beta:
+  mysql:
+    prod:
+      host: beta.example.com
+      port: 3306
+      database: beta_prod
+      username: beta_user
+      password: beta_password
+```
+3. 保存文件（系统会自动检测并重新加载）
+4. 使用 `list_available` 查看新添加的客户：`{"customers": ["acme", "beta"]}`
+5. 使用 `switch_database` 切换到新配置：`beta / mysql / prod`
 
 ## 🛠️ MCP 配置
 
@@ -253,6 +301,7 @@ security:
 | 工具名 | 描述 | 参数 |
 |--------|------|------|
 | `switch_database` | 切换数据库连接 | customer, dbType, env |
+| `reload_config` | 重新加载配置文件 | 无 |
 | `query` | 执行 SQL 查询 | sql |
 | `get_schema` | 获取数据库 Schema | 无 |
 | `explain_sql` | 获取执行计划 | sql |
@@ -271,7 +320,7 @@ db-gateway-mcp/
 ├── src/
 │   ├── datasource/
 │   │   ├── connections.ts           # 数据库连接实现
-│   │   └── registry.ts              # 数据源注册中心
+│   │   └── registry.ts              # 数据源注册中心（支持热加载）
 │   ├── security/
 │   │   └── security.ts              # SQL 安全控制
 │   ├── audit/
@@ -328,6 +377,11 @@ sqlite3 audit.db ".schema audit_log"
 - 检查配置文件是否存在
 - 确认端口是否被占用
 
+**Q: 添加新数据库需要重启吗？**
+- 不需要！系统支持配置文件热加载
+- 直接修改配置文件，系统会自动检测并重新加载
+- 或者使用 `reload_config` 工具手动重新加载
+
 ## 📈 性能指标
 
 | 指标 | 目标值 | 说明 |
@@ -338,6 +392,7 @@ sqlite3 audit.db ".schema audit_log"
 | 最大并发连接 | 100+ | 总连接数 |
 | 数据源缓存 | LRU | 自动管理 |
 | 缓存 TTL | 30 分钟 | 自动过期 |
+| 配置热加载 | < 100ms | 文件变化到配置生效 |
 
 ## 🤝 贡献指南
 

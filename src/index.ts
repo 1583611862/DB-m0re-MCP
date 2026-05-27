@@ -10,7 +10,6 @@ import { DatasourceRegistry } from './datasource/registry';
 import { SecurityManager } from './security/security';
 import { AuditLogger } from './audit/audit';
 import { logger } from './logger';
-import path from 'path';
 
 const CONFIG_PATH = process.env.DATASOURCE_CONFIG || './config/datasource-center.yaml';
 const SECURITY_CONFIG_PATH = process.env.SECURITY_CONFIG || './config/security.yaml';
@@ -57,6 +56,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ['customer', 'dbType', 'env'],
+        },
+      },
+      {
+        name: 'reload_config',
+        description: 'Reload configuration file to apply new database connections without restarting the server',
+        inputSchema: {
+          type: 'object',
+          properties: {},
         },
       },
       {
@@ -163,6 +170,18 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: `Successfully switched to: ${customer} / ${dbType} / ${env}`,
+            },
+          ],
+        };
+      }
+
+      case 'reload_config': {
+        const result = registry.reloadConfig();
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result.message,
             },
           ],
         };
