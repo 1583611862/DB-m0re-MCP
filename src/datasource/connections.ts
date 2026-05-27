@@ -128,8 +128,8 @@ class PostgreSQLClient implements DatabaseClient {
     const result = await this.pool.query(sql, params);
     const duration = Date.now() - start;
     return {
-      columns: result.fields.map(f => f.name),
-      rows: result.rows.map(row => Object.values(row)),
+      columns: result.fields.map((f: { name: string }) => f.name),
+      rows: result.rows.map((row: any) => Object.values(row)),
       rowCount: result.rowCount || 0,
       duration,
     };
@@ -236,11 +236,11 @@ class OracleClient implements DatabaseClient {
       outFormat: oracledb.OUT_FORMAT_OBJECT,
     });
     const duration = Date.now() - start;
-    const columns = result.metaData?.map(m => m.name) || [];
+    const columns = result.metaData?.map((m: { name: string }) => m.name) || [];
     const rows = result.rows || [];
     return {
       columns,
-      rows: rows.map(row => Object.values(row)),
+      rows: rows.map((row: any) => Object.values(row)),
       rowCount: rows.length,
       duration,
     };
@@ -355,10 +355,10 @@ class SQLServerClient implements DatabaseClient {
     const request = this.pool.request();
     const result = await request.query(sql);
     const duration = Date.now() - start;
-    const columns = result.recordset.columns.map(c => c.name);
+    const columns = Object.keys(result.recordset[0] || {});
     return {
       columns,
-      rows: result.recordset.map(row => Object.values(row)),
+      rows: result.recordset.map((row: any) => Object.values(row)),
       rowCount: result.rowsAffected[0] || 0,
       duration,
     };
