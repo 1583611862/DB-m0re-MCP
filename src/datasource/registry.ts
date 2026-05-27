@@ -26,11 +26,11 @@ export class DatasourceRegistry {
 
   constructor(configPath: string) {
     this.config = this.loadConfig(configPath);
-    this.cache = new LRUCache({
+    this.cache = new LRUCache<string, { client: DatabaseClient; context: DatasourceContext }>({
       max: 20,
       ttl: 30 * 60 * 1000,
-      dispose: async (key, value) => {
-        await value.client.close();
+      dispose: (value: { client: DatabaseClient; context: DatasourceContext }) => {
+        value.client.close().catch(() => {});
       },
     });
   }
